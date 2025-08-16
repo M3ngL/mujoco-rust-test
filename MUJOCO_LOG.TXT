@@ -1,0 +1,9 @@
+Wed Jul 23 11:45:16 2025
+ERROR: an OpenGL platform library has not been loaded into this process, this most likely means that a valid OpenGL context has not been created before mjr_makeContext was called
+
+Wed Jul 23 11:46:15 2025
+WARNING: Pre-allocated visual geom buffer is full. Increase maxgeom above 0. Time = 0.0000.
+
+Wed Jul 23 11:46:15 2025
+ERROR: mjvScene scale too small in mjv_room2model
+
