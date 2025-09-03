@@ -37,7 +37,7 @@ pub fn ui_init(simulation: &Simulation) -> (mjvCamera_, mjvOption_, mjvScene_, m
         mjv_defaultOption(&mut opt);
         mjv_defaultScene(&mut scn);
         mjr_defaultContext(&mut con);
-        mjv_makeScene(simulation.model.ptr(), &mut scn, 2000);
+        mjv_makeScene(simulation.model.ptr(), &mut scn, 10000);
         mjr_makeContext(simulation.model.ptr(), &mut con, 200);
     }
     (cam, opt, scn, con, window)
