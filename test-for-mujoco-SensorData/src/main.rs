@@ -50,6 +50,19 @@ fn main() {
     let rf_dim = unsafe { *mj_model.sensor_dim.add(3) } as usize;
     let rf_data = &simulation.sensordata()[rf_start..rf_start + rf_dim];
     
+    // 4. 360Lidar (get Sensor IDs)
+    let angles = [
+        0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165,
+        180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345,
+    ];
+    let mut rf_ids: Vec<u16>  = Vec::new();
+    for angle in angles.iter() {
+        let sensor_name = format!("rf_{}", angle);
+        let id = model.name_to_id(ObjType::SITE, &sensor_name).unwrap();
+        rf_ids.push(id);
+    }
+
+
     // get sensor id
     // let sensor_id = simulation
     //     .model
@@ -74,6 +87,10 @@ fn main() {
         
         let imu_data = imu::ImuData{pitch_rate: simulation.sensordata()[0]};
 
+        for i in rf_ids.iter() {
+            let d = simulation.sensordata()[*i as usize];
+            println!("{}: {:?} ", i, d);
+        }
         // if current_time > 2.0 && current_time < 3.0 {
         //     flight_controller.set_target_pitch_rate(0.2); // 2秒后将目标俯仰角速度设置为 0.2 rad/s
         // } else {
