@@ -1,7 +1,5 @@
 // main.rs
 mod camera;
-mod ctrl;
-mod imu;
 mod ui;
 use std::ptr;
 use glfw::Context;
@@ -14,10 +12,7 @@ fn main() {
     // 模拟 MuJoCo 仿真器的时间步长
     const SIMULATION_DT: f64 = 0.01; // 100 Hz 更新频率
 
-    // 初始化飞行控制器，这里需要根据你的无人机和仿真环境调整 PID 增益
-    let mut flight_controller = ctrl::FlightController::new(0.5, 0.1, 0.05);
-
-    println!("开始飞行控制器模拟...");
+    println!("Sim Start...");
     println!("--------------------------------------------------");
 
     // 模拟来自 MuJoCo 的 IMU 数据
@@ -52,14 +47,11 @@ fn main() {
         let sensor_dim = unsafe { (*simulation.model.ptr()).sensor_dim.add(sensor_index) };
         let sensor_dim = unsafe { *sensor_dim } as usize;
         
-        let imu_data = imu::ImuData{pitch_rate: simulation.sensordata()[0]};
-
+    
         let ptr = unsafe { mujoco_rs_sys::no_render::mj_makeData(model.ptr() as *const mjModel_) };
         let mj_data = unsafe { &*ptr };
         println!("{:?}", unsafe { mj_data.ncon });
 
-        // 更新飞行控制器并获取推力输出
-        let thrust = flight_controller.update(imu_data, SIMULATION_DT);
         let geoms = simulation.model.geoms();
     
         unsafe {
@@ -131,5 +123,5 @@ fn main() {
     }
 
     println!("--------------------------------------------------");
-    println!("模拟结束。");
+    println!("Sim Done.");
 }

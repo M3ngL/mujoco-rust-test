@@ -1,0 +1,54 @@
+<mujoco model="Skydio X2 scene">
+  <include file="x2.xml"/>
+  <statistic center="0 0 0.1" extent="0.6" meansize=".05"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="-20" elevation="-20" ellipsoidinertia="true"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3"
+      markrgb="0.8 0.8 0.8" width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+    <material name="building_mat" rgba="0.5 0.5 0.5 1"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
+    <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
+
+   <!-- 地面 -->
+    <geom name="ground" type="plane" size="100 100 0.1" rgba="0.2 0.3 0.4 1"/>
+    
+    <!-- 道路（两条水平，两条垂直，形成网格） -->
+    <geom name="road_h1" type="box" pos="15 0 0.01" size="50 2.5 0.01" rgba="0.3 0.3 0.3 1"/>
+    <geom name="road_h2" type="box" pos="15 25 0.01" size="50 2.5 0.01" rgba="0.3 0.3 0.3 1"/>
+    <geom name="road_v1" type="box" pos="0 15 0.01" size="2.5 50 0.01" rgba="0.3 0.3 0.3 1"/>
+    <geom name="road_v2" type="box" pos="25 15 0.01" size="2.5 50 0.01" rgba="0.3 0.3 0.3 1"/>
+    
+    <!-- 建筑物（立方体，间距>5m） -->
+    <geom name="building1" type="box" pos="5 5 5" size="2 2 10" rgba="0.5 0.5 0.5 1" mass="1000"/>
+    <geom name="building2" type="box" pos="5 10 7" size="2 2 14" rgba="0.5 0.5 0.5 1" mass="1000"/>
+    <geom name="building3" type="box" pos="10 5 6" size="2 2 12" rgba="0.5 0.5 0.5 1" mass="1000"/>
+    <geom name="building4" type="box" pos="10 10 4" size="2 2 8" rgba="0.5 0.5 0.5 1" mass="1000"/>
+    <geom name="building5" type="box" pos="15 10 5" size="2 2 10" rgba="0.5 0.5 0.5 1" mass="1000"/>
+    
+    <!-- 车辆（动态移动，沿道路，间距>5m） -->
+    <!-- <body name="vehicle1" pos="10 2.5 0.5">
+      <joint name="vehicle1_slide" type="slide" axis="1 0 0" range="-40 40" stiffness="0"/>
+      <geom name="vehicle1_body" type="box" size="1.5 0.8 0.5" rgba="0.7 0.2 0.2 1" mass="1000"/>
+    </body>
+    <body name="vehicle2" pos="20 22.5 0.5">
+      <joint name="vehicle2_slide" type="slide" axis="1 0 0" range="-40 40" stiffness="0"/>
+      <geom name="vehicle2_body" type="box" size="1.5 0.8 0.5" rgba="0.7 0.2 0.2 1" mass="1000"/>
+    </body>
+    <body name="vehicle3" pos="2.5 20 0.5">
+      <joint name="vehicle3_slide" type="slide" axis="0 1 0" range="-40 40" stiffness="0"/>
+      <geom name="vehicle3_body" type="box" size="1.5 0.8 0.5" rgba="0.7 0.2 0.2 1" mass="1000"/>
+    </body> -->
+
+  </worldbody>
+</mujoco>

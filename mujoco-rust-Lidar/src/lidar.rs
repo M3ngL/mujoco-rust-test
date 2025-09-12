@@ -1,4 +1,4 @@
-use minifb::{Window, WindowOptions, Key};
+use minifb::{Window, WindowOptions};
 use std::f64::consts::PI;
 
 pub fn init_lidar_window(width: usize, height: usize) -> Result<Window, Box<dyn std::error::Error>> {
@@ -14,6 +14,53 @@ pub fn init_lidar_window(width: usize, height: usize) -> Result<Window, Box<dyn 
     Ok(window)
 }
 
+pub fn update_lidar_buffer(
+    lidar_width: usize,
+    lidar_height: usize,
+    buffer: &mut [u32],
+    rf_ids: &[u16],
+    angles: &[u16],
+    simulation: &mujoco_rust::Simulation,
+) {
+    // Lidar 坐标线
+    let center_x = lidar_width as f64 / 2.0;
+    let center_y = lidar_height as f64 / 2.0;
+    let max_radius = 10.0; // 最大距离10米
+    let pixels_per_meter = (lidar_width as f64 / 2.0 - 20.0) / max_radius;
+
+    // update lidar window
+    buffer.fill(0xFFFFFFFF); // 白色背景，确保清除上一次记录点
+
+    for r in 1..=10 {
+        let radius = r as f64 * pixels_per_meter;
+        draw_circle_outline(buffer, lidar_width, lidar_height, center_x, center_y, radius, 0x800000);
+    }
+
+    for theta in (0..360).step_by(30) {
+        let theta_rad = theta as f64 * PI / 180.0;
+        let x1 = center_x;
+        let y1 = center_y;
+        let x2 = center_x + (max_radius * pixels_per_meter) * theta_rad.cos();
+        let y2 = center_y + (max_radius * pixels_per_meter) * theta_rad.sin();
+        draw_line(buffer, lidar_width, lidar_height, x1, y1, x2, y2, 0xFF000000); // 黑色角度线
+    }
+
+    let mut points = Vec::new();
+    for (i, &id) in rf_ids.iter().enumerate() {
+        let distance = simulation.sensordata()[(id + 1) as usize];
+        let theta = angles[i] as f64 * PI / 180.0;
+        if distance >= 0.0 && distance <= 10.0 {
+            points.push((theta, distance));
+        }
+    }
+
+    // 绘制激光雷达点（黑色）
+    for (theta, r) in &points {
+        let x = center_x + (r * pixels_per_meter) * theta.cos();
+        let y = center_y + (r * pixels_per_meter) * theta.sin();
+        draw_circle(buffer, lidar_width, lidar_height, x, y, 3.0, 0xFF000000);
+    }
+}
 
 // 绘制圆形
 pub fn draw_circle(buffer: &mut [u32], width: usize, height: usize, cx: f64, cy: f64, radius: f64, color: u32) {

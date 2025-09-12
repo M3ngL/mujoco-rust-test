@@ -13,7 +13,7 @@ fn main() {
     // 初始化飞行控制器，这里需要根据你的无人机和仿真环境调整 PID 增益
     let mut flight_controller = ctrl::FlightController::new(0.5, 0.1, 0.05);
 
-    println!("开始飞行控制器模拟...");
+    println!("Sim Start...");
     println!("--------------------------------------------------");
 
     // 模拟来自 MuJoCo 的 IMU 数据
@@ -148,5 +148,5 @@ fn main() {
     // }
 
     println!("--------------------------------------------------");
-    println!("模拟结束。");
+    println!("Sim Done.");
 }

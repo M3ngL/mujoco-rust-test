@@ -8,6 +8,7 @@ use gl;
 use mujoco_rust::Simulation;
 use std::ptr;
 
+use mujoco_rust::model::ObjType;
 
 pub fn ui_init(simulation: &Simulation) -> (mjvCamera_, mjvOption_, mjvScene_, mjrContext_, glfw::Window) {
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
@@ -37,9 +38,14 @@ pub fn ui_init(simulation: &Simulation) -> (mjvCamera_, mjvOption_, mjvScene_, m
         mjv_defaultOption(&mut opt);
         mjv_defaultScene(&mut scn);
         mjr_defaultContext(&mut con);
-        mjv_makeScene(simulation.model.ptr(), &mut scn, 10000);
+        mjv_makeScene(simulation.model.ptr(), &mut scn, 2000);
         mjr_makeContext(simulation.model.ptr(), &mut con, 200);
     }
+
+    let cam_id = simulation.model.name_to_id(ObjType::CAMERA, "camera2").unwrap();
+    cam.fixedcamid = cam_id as i32;
+    cam.type_ = 2; // 固定相机
+    
     (cam, opt, scn, con, window)
 }
 
