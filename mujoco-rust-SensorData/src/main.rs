@@ -1,10 +1,9 @@
 // main.rs
-use std::ptr;
-use glfw::Context;
-use mujoco_rs_sys::render::*;
 use mujoco_rust::model::ObjType;
 
-const SIMULATION_DT: f64 = 0.01; // 100 Hz
+use std::ffi::CStr;
+use std::slice;
+use std::u8;
 
 fn main() {
     println!("Sim Start...");
@@ -18,10 +17,10 @@ fn main() {
     let actuator_num = unsafe { (*simulation.model.ptr()).nu };
     let mut ctrl: Vec<f64> = vec![0.0; actuator_num as usize]; 
     
-    
+    // get number of sensors
     let mj_model = unsafe { *model.ptr() };
     let nsensor = unsafe { (*simulation.model.ptr()).nsensor};
-    println!("sensor:{}", nsensor);
+    println!("the number of sensors:{}", nsensor);
 
     // get sensor data by sensor definition sequence
     // 0: gyro
@@ -53,10 +52,24 @@ fn main() {
         rf_ids.push(id);
     }
 
-    // let mut sensor_names: Vec<(_, _)> = Vec::<(T, T)>::new();
-    // println!("{}", sensor_names.iter().map(|(i, name): &(_, _)| format!("{}: {}", i, name)).collect::<Vec<_>>().join(", "));
-    // println!("{}", simulation.model.geoms().iter().map(|g| g.name.to_string()).collect::<Vec<_>>().join(", "));
-    
+
+    // get all model names
+    let mut model_names: Vec<&str> = Vec::new();
+    unsafe{
+        let data = slice::from_raw_parts(mj_model.names as *const u8,
+             mj_model.nnames as usize);
+
+        let mut start = 0;
+        for (i, &c) in data.iter().enumerate() {
+            if c == 0 {
+                let s = CStr::from_bytes_with_nul_unchecked(&data[start..=i]);
+                model_names.push(s.to_str().unwrap());
+                start = i + 1;
+            }
+        }
+    }
+    println!("{:?}", model_names);
+
 
     // sim running for a while
     for i in 0..500 {
