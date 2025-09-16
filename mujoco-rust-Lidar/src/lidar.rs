@@ -1,13 +1,31 @@
 use minifb::{Window, WindowOptions};
 use std::f64::consts::PI;
+use mujoco_rust::model::ObjType;
+use mujoco_rust;
+
+pub fn get_lidar_id(model: mujoco_rust::Model) -> Vec<u16>{
+    let mut rf_ids: Vec<u16>  = Vec::new();
+
+    let angles = [
+        0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165,
+        180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345,
+    ];
+
+    for angle in angles.iter() {
+        let sensor_name = format!("rf_{}", angle);
+        let id = model.name_to_id(ObjType::SITE, &sensor_name).unwrap();
+        rf_ids.push(id);
+    }
+    rf_ids
+}
 
 pub fn init_lidar_window(width: usize, height: usize) -> Result<Window, Box<dyn std::error::Error>> {
     let window = Window::new(
-        "LiDAR Scan (Press ESC to exit)",
+        "LiDAR Scan",
         width,
         height,
         WindowOptions {
-            borderless: true, // 禁用窗口装饰
+            borderless: true, // Disable window decoration
             ..WindowOptions::default()
         }
     )?;
@@ -19,17 +37,20 @@ pub fn update_lidar_buffer(
     lidar_height: usize,
     buffer: &mut [u32],
     rf_ids: &[u16],
-    angles: &[u16],
     simulation: &mujoco_rust::Simulation,
 ) {
-    // Lidar 坐标线
+    // Lidar coordinate line
     let center_x = lidar_width as f64 / 2.0;
     let center_y = lidar_height as f64 / 2.0;
-    let max_radius = 10.0; // 最大距离10米
+    let max_radius = 10.0; // max distance:10m
     let pixels_per_meter = (lidar_width as f64 / 2.0 - 20.0) / max_radius;
 
-    // update lidar window
-    buffer.fill(0xFFFFFFFF); // 白色背景，确保清除上一次记录点
+    let angles = [
+        0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165,
+        180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345,
+    ];
+    // update lidar window to clear the last recorded point
+    buffer.fill(0xFFFFFFFF);
 
     for r in 1..=10 {
         let radius = r as f64 * pixels_per_meter;
@@ -42,27 +63,26 @@ pub fn update_lidar_buffer(
         let y1 = center_y;
         let x2 = center_x + (max_radius * pixels_per_meter) * theta_rad.cos();
         let y2 = center_y + (max_radius * pixels_per_meter) * theta_rad.sin();
-        draw_line(buffer, lidar_width, lidar_height, x1, y1, x2, y2, 0xFF000000); // 黑色角度线
+        draw_line(buffer, lidar_width, lidar_height, x1, y1, x2, y2, 0xFF000000); // black angle line
     }
 
     let mut points = Vec::new();
     for (i, &id) in rf_ids.iter().enumerate() {
-        let distance = simulation.sensordata()[(id + 1) as usize];
+        let distance = simulation.sensordata()[(id +1) as usize];
         let theta = angles[i] as f64 * PI / 180.0;
         if distance >= 0.0 && distance <= 10.0 {
             points.push((theta, distance));
         }
     }
 
-    // 绘制激光雷达点（黑色）
+    //  Draw black lidar dots
     for (theta, r) in &points {
         let x = center_x + (r * pixels_per_meter) * theta.cos();
         let y = center_y + (r * pixels_per_meter) * theta.sin();
-        draw_circle(buffer, lidar_width, lidar_height, x, y, 3.0, 0xFF000000);
+        draw_circle(buffer, lidar_width, lidar_height, x, y, 3.0, 0xFF0000);
     }
 }
 
-// 绘制圆形
 pub fn draw_circle(buffer: &mut [u32], width: usize, height: usize, cx: f64, cy: f64, radius: f64, color: u32) {
     let cx = cx.round() as i32;
     let cy = cy.round() as i32;
@@ -79,7 +99,7 @@ pub fn draw_circle(buffer: &mut [u32], width: usize, height: usize, cx: f64, cy:
 }
 
 
-// 绘制空心圆环（用于距离网格，细线）
+//Draw hollow rings
 pub fn draw_circle_outline(buffer: &mut [u32], width: usize, height: usize, cx: f64, cy: f64, radius: f64, color: u32) {
     let cx = cx.round() as i32;
     let cy = cy.round() as i32;
@@ -115,7 +135,7 @@ pub fn draw_circle_outline(buffer: &mut [u32], width: usize, height: usize, cx: 
     }
 }
 
-// 绘制线条（Bresenham 算法）
+//Draw lines in Bresenham algorithm
 pub fn draw_line(buffer: &mut [u32], width: usize, height: usize, x1: f64, y1: f64, x2: f64, y2: f64, color: u32) {
     let mut x1 = x1.round() as i32;
     let mut y1 = y1.round() as i32;
