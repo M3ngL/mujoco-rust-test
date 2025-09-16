@@ -8,7 +8,6 @@ use mujoco_rust::Simulation;
 use std::ptr;
 use std::sync::mpsc;
 
-use mujoco_rust::model::ObjType;
 
 pub struct UIState {
     pub cameras: Vec<render::mjvCamera_>,
@@ -16,7 +15,7 @@ pub struct UIState {
     pub scenes: Vec<render::mjvScene_>,
     pub contexts: Vec<render::mjrContext_>,
     pub window: glfw::Window,
-    pub events: mpsc::Receiver<(f64, glfw::WindowEvent)>,
+    pub events: mpsc::Receiver<(f64, glfw::WindowEvent)>
 }
 
 pub fn ui_init(glfw: &mut glfw::Glfw, simulation: &Simulation, cam_ids: &[i32]) -> UIState {

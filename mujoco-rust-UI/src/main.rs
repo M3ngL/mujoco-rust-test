@@ -44,6 +44,8 @@ fn main() {
 
         // Get events in real time
         glfw.poll_events();
+        glfw::flush_messages(&ui_state_1st.events);
+        glfw::flush_messages(&ui_state_3rd.events);
     }
 
     ui::free_glfw(&mut ui_state_1st);
