@@ -1,91 +1,54 @@
 use std::io::Write;
-use std::process::{Command, Stdio};
-use std::thread;
-use std::time::Duration;
-mod camera;
-use mujoco_rs_sys::render::*;
+mod stream;
 
 fn main() {
-    // 配置 FFmpeg 命令
-    let rtsp_url = "rtsp://localhost:8554/mystream".to_string();
-    let mut ffmpeg: std::process::Child = match Command::new("ffmpeg")
-        .args([
-            "-f", "rawvideo",
-            "-pixel_format", "rgb24",
-            "-video_size", "640x480",
-            "-framerate", "30",
-            "-i", "pipe:",
-            "-c:v", "libx264",
-            "-pix_fmt", "yuv420p",
-            "-preset", "ultrafast",
-            "-tune", "zerolatency",
-            "-f", "rtsp",
-            "-rtsp_transport", "tcp",
-            &rtsp_url
-        ])
-        .stdin(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-    {
-        Ok(child) => child,
-        Err(e) => {
-            eprintln!("错误: 无法启动 FFmpeg: {}", e);
-            return;
-        }
-    };
-
-
-    let model = mujoco_rust::Model::from_xml("/home/m3/project/myRustPilot/x2/scene.xml".to_string()).unwrap();
+    // init model
+    let model = mujoco_rust::Model::from_xml("../x2/scene.xml".to_string()).unwrap();
     let simulation = mujoco_rust::Simulation::new(model.clone());
 
-    // 获取 FFmpeg 的 stdin
-    let mut stdin: std::process::ChildStdin = match ffmpeg.stdin.take() {
-        Some(stdin) => stdin,
-        None => {
-            eprintln!("错误: 无法获取 FFmpeg stdin");
-            return;
-        }
-    };
+    // init ctrl vector 
+    let actuator_num = unsafe { (*simulation.model.ptr()).nu };
+    let mut ctrl: Vec<f64> = vec![0.0; actuator_num as usize]; 
 
-    let (mut window, mut VS_cam, mut VS_vopt, mut VS_scene, mut VS_context) = camera::init_glfw(&simulation);
-    // 仿真循环
-    for i in 0..1000 {
+    // init ffmpeg
+    let mut ffmpeg = stream::init_ffmpeg();
+    let mut stdin = ffmpeg.stdin.take().unwrap();
+
+    // init glfw
+    let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+    let mut ui_state = stream::glfw_init(&mut glfw, &simulation);
+
+    // sim running until the window closes
+    while !ui_state.window.should_close() {
+        // ctrl array fixed settings
+        ctrl[..4].fill(4.5);
+        simulation.control(&ctrl);
+
+        // write frame into ffmpeg
+        let frame = stream::update_mjscene(&simulation,  &mut ui_state);
+        let _ = stdin.write_all(&frame);
+
+        // sim forward a step
         simulation.step();
-
-        simulation.control([3.5,3.5,3.5,3.5].as_ref());
-        let frame = camera::update_mjscene(&simulation,  &mut VS_cam, &mut VS_vopt, &mut VS_scene, &mut VS_context);
-        // 写入帧数据到 FFmpeg
-        if let Err(e) = stdin.write_all(&frame) {
-            eprintln!("错误: 写入 FFmpeg 失败: {}", e);
-            return;
-        }
-
-
-        
-        // 控制帧率（30 FPS）
-        // thread::sleep(Duration::from_millis(1000 / 30));
-
     }
-    unsafe {
-            mjv_freeScene(&mut VS_scene);
-            mjr_freeContext(&mut VS_context);
-        }
-    // 关闭 stdin
+
+    // free glfw resource
+    stream::free_resource(&mut ui_state);
+    // close stdin
     drop(stdin);
 
-    // 等待 FFmpeg 进程结束
+     // wait for FFmpeg end
     match ffmpeg.wait_with_output() {
         Ok(output) => {
             if !output.status.success() {
-                eprintln!("FFmpeg 错误: {}", String::from_utf8_lossy(&output.stderr));
+                eprintln!("FFmpeg error: {}", String::from_utf8_lossy(&output.stderr));
                 return;
             }
         }
         Err(e) => {
-            eprintln!("错误: 等待 FFmpeg 失败: {}", e);
+            eprintln!("Error: wait for FFmpeg failed: {}", e);
             return;
         }
     }
 
-    println!("视频流传输完成");
 }
