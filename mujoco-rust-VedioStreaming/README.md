@@ -87,7 +87,7 @@ unsafe {
 }
 ````
 
-The rendered image is consistent with UI rendering, except that after the image rendering is updated,`render::mjr_render` is no longer called to render the displayed image directly, but the rgb data of the image is read and returned (sometimes the video stream reverses the image upside down, so there is also vertically flipped rgb data), and written into the pipeline output.
+The rendered image is consistent with UI rendering, except that after the image rendering update,`window.swap_buffers()` is no longer called to exchange buffer data to display the rendered image, but the rgb data of the image is read and returned (video stream sometimes reverses the image upside down, so there is vertical flip rgb data), and written to pipeline output.
 
 The video stream effect is as shown in the figure (displayed using QGC of ground station). FFmpeg push needs RTSP protocol server like `mediamtx` as intermediary before it can be transmitted to other clients for display.
 

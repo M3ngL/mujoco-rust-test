@@ -20,18 +20,10 @@
     <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
     <geom name="floor" size="0 0 0.05" type="plane" material="groundplane"/>
 
-    <geom name="wall1" type="box" size="1.7 0.01 0.8" pos="0 1.7 0.8" />
-    <geom name="wall2" type="box" size="1.7 0.01 0.8" pos="0 -1.7 0.8"/>
-    <geom name="wall3" type="box" size="0.01 1.7 0.8" pos="1.7 0 0.8" />
-    <geom name="wall4" type="box" size="0.01 1.7 0.8" pos="-1.7 0 0.8"/>
-
-  <!-- 建筑物（立方体，间距>5m，位置和高度随机但确保间距） -->
-    <!-- <geom name="building1" type="box" pos="10 10 5" size="2 2 10" material="building_mat" mass="1000"/>
-    <geom name="building2" type="box" pos="20 10 7" size="2 2 14" material="building_mat" mass="1000"/>
-    <geom name="building3" type="box" pos="10 20 6" size="2 2 12" material="building_mat" mass="1000"/>
-    <geom name="building4" type="box" pos="20 20 4" size="2 2 8" material="building_mat" mass="1000"/>
-    <geom name="building5" type="box" pos="15 30 5" size="2 2 10" material="building_mat" mass="1000"/> -->
-
+    <geom name="wall1" type="box" size="1.7 0.01 0.8" pos="0 1.7 0.8"  contype="1" conaffinity="1"/>
+    <geom name="wall2" type="box" size="1.7 0.01 0.8" pos="0 -1.7 0.8" contype="1" conaffinity="1"/>
+    <geom name="wall3" type="box" size="0.01 1.7 0.8" pos="1.7 0 0.8" contype="1" conaffinity="1" />
+    <geom name="wall4" type="box" size="0.01 1.7 0.8" pos="-1.7 0 0.8" contype="1" conaffinity="1"/>
 
   </worldbody>
 </mujoco>
